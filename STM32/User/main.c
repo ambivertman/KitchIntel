@@ -9,7 +9,7 @@
 
 QueueHandle_t queue;
 
-int flag_count = 0;
+
 void task1(void *arg) {
 	char buf[30] = { 0 };
 	char data = 0;
@@ -18,19 +18,16 @@ void task1(void *arg) {
 		BaseType_t ret = xQueueReceive(queue, &data, portMAX_DELAY);
 		if (ret == pdTRUE) {
 			buf[strlen(buf)] = data;
-			if (data == '!') {
-				flag_count++;
-			}
 		}
 		//需要有一个结束的标记
 		char wifi_account[10] = { 0 };
 		char wifi_passwd[10] = { 0 };
-		if (flag_count == 2) {
-			printf1("succeed\r\n");
-			sscanf(buf, "!%[^=]=%[^!]!", wifi_account, wifi_passwd);
+
+		int ret = sscanf(buf, "!%[^=]=%[^!]!", wifi_account, wifi_passwd);
+		if (ret == 2) {
 			printf1("%s:%s\r\n", wifi_account, wifi_passwd);
-			flag_count = 0;
 		}
+
 	}
 }
 
