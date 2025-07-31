@@ -50,7 +50,7 @@ void USART3_IRQHandler(void) {
 	if (USART_GetITStatus(USART3, USART_IT_RXNE) != RESET) {
 		char data = USART_ReceiveData(USART3);
 		BaseType_t Is_Woken = pdTRUE;
-		xQueueSendFromISR(queue, &data, &Is_Woken);
+		xQueueSendFromISR(queue1, &data, &Is_Woken);
 	}
 }
 

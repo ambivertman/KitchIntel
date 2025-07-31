@@ -11,9 +11,9 @@
 
 void USART1_Init(void);
 void USART1_SendByte(uint8_t Byte);
-void printf1(char* format, ...);
+void printf1(char *format, ...);
 
-extern QueueHandle_t queue;
+extern QueueHandle_t queue1;
 
 
 #endif

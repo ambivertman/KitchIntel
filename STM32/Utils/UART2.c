@@ -49,7 +49,7 @@ void USART2_IRQHandler(void) {
 	if (USART_GetITStatus(USART2, USART_IT_RXNE) != RESET) {
 		char data = USART_ReceiveData(USART2);
 		BaseType_t Is_Woken = pdTRUE;
-		xQueueSendFromISR(queue, &data, &Is_Woken);
+		xQueueSendFromISR(queue2, &data, &Is_Woken);
 	}
 }
 
@@ -59,7 +59,7 @@ void USART2_SendByte(uint8_t Byte) {
 	while (USART_GetFlagStatus(USART2, USART_FLAG_TXE) == RESET);
 }
 
-void printf2(char *format, ...) {
+void send_to_esp(char *format, ...) {
 	// 加锁
 	char strs[100];
 

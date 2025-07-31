@@ -88,5 +88,5 @@ NVIC value of 255. */
 #define xPortSysTickHandler SysTick_Handler
 
 #define configSUPPORT_DYNAMIC_ALLOCATION 1
-
+#define configUSE_QUEUE_SETS 1
 #endif /* FREERTOS_CONFIG_H */
