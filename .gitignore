@@ -1,0 +1,10 @@
+.vscode/
+DebugConfig/
+Listings/
+Objects/
+.clangd
+*.uvguix.刘英俊
+*.uvoptx
+*.uvprojx
+*.json
+project_init.bat
