@@ -56,6 +56,7 @@ void USART2_IRQHandler(void) {
 // 发送字节
 void USART2_SendByte(uint8_t Byte) {
 	USART_SendData(USART2, Byte);
+
 	while (USART_GetFlagStatus(USART2, USART_FLAG_TXE) == RESET);
 }
 

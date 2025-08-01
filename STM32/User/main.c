@@ -11,7 +11,8 @@ QueueSetHandle_t xQueueSet;
 QueueHandle_t queue1, queue2;
 
 void task1(void *arg) {
-	char buf[60] = { 0 };
+	char USART_buf[100] = { 0 };
+	char ESP_buf[100] = { 0 };
 	char data = 0;
 
 	while (1) {
@@ -22,32 +23,53 @@ void task1(void *arg) {
 		QueueSetMemberHandle_t set = xQueueSelectFromSet(xQueueSet, portMAX_DELAY);
 		//消息来自串口工具
 		if (set == queue1) {
-			BaseType_t ret = xQueueReceive(queue1, &data, 0);
-			if (ret == pdTRUE) {
-				buf[strlen(buf)] = data;
+			while (xQueueReceive(queue1, &data, 200) == pdTRUE) {
+				// 防止缓冲区溢出
+				if (strlen(USART_buf) < sizeof(USART_buf) - 1) {
+					USART_buf[strlen(USART_buf)] = data;
+				} else {
+					printf1("USART_buf overflow\r\n!");
+				}
 			}
-			if (data == '\n') {
-				//printf1("%s", buf);
-				send_to_esp(buf);
-				memset(buf, 0, sizeof(buf));
-			}
+			send_to_esp(USART_buf);
+			memset(USART_buf, 0, sizeof(USART_buf));
 		}
 
 		//消息来自esp01s
 		if (set == queue2) {
-			BaseType_t ret = xQueueReceive(queue2, &data, 0);
-			if (ret == pdTRUE) {
-				buf[strlen(buf)] = data;
+			//完整的消息体
+			while (xQueueReceive(queue2, &data, 200) == pdTRUE) {
+				// 防止缓冲区溢出
+				if (strlen(ESP_buf) < sizeof(ESP_buf) - 1) {
+					ESP_buf[strlen(ESP_buf)] = data;
+				} else {
+					printf1("esp_buf overflow\r\n!");
+					memset(USART_buf, 0, sizeof(USART_buf));
+				}
 			}
-			if (data == '\n') {
-				printf1("%s", buf);
-				// if (strstr(buf, "OK") != NULL) {
-				// 	printf1("command 1!\r\n");
-				// } else if (strstr(buf, "FAIL") != NULL) {
-				// 	printf1("command 0!\r\n");
-				// }
-				memset(buf, 0, sizeof(buf));
+			//最后一行的返回总是要等到下一次有消息才能打印
+			//猜测可能是收到上一次的消息时正在打印,在打印的流程中下一条返回进来了
+			//然后把消息存到了ESP_buf中,但是轮到最后一行输出的时候,消息队列集又陷入了阻塞
+			//所以最后一条进入不了流程
+			//但是按这种想法的话,按道理每次在输出的时候,中断是会把ESP_buf中是的内容搞乱的
+			//现在的情况又只是卡住最后一条消息
+			//总的问题应该是发的快,取得慢 该如何解决??
+
+			//实际上可能是换行符的问题转义字符
+			if (strstr(ESP_buf, "OK") != NULL) {
+				printf1("%s", ESP_buf);
+				memset(ESP_buf, 0, sizeof(ESP_buf));
+			} else if (strstr(ESP_buf, "Fail") != NULL) {
+				printf1("%s", ESP_buf);
+				memset(ESP_buf, 0, sizeof(ESP_buf));
+			} else if (strstr(ESP_buf, "ERROR") != NULL) {
+				printf1("%s", ESP_buf);
+				memset(ESP_buf, 0, sizeof(ESP_buf));
+			} else if (strstr(ESP_buf, "busy") != NULL) {
+				printf1("%s", ESP_buf);
+				memset(ESP_buf, 0, sizeof(ESP_buf));
 			}
+
 		}
 	}
 
@@ -60,17 +82,17 @@ int main(void) {
 	USART1_Init();
 	USART2_Init();
 
-	queue1 = xQueueCreate(5, 1);
-	queue2 = xQueueCreate(5, 1);
+	queue1 = xQueueCreate(50, 1);
+	queue2 = xQueueCreate(100, 1);
 
-	// 5+5:表示创建一个最多可存储10+5个事件(所有队列最大值的总和)的队列集
-	xQueueSet = xQueueCreateSet(5 + 5);
+	// 5+5:表示创建一个最多可存储50+50个事件(所有队列最大值的总和)的队列集
+	xQueueSet = xQueueCreateSet(50 + 150);
 
 	// 将队列加入队列集
 	xQueueAddToSet(queue1, xQueueSet);
 	xQueueAddToSet(queue2, xQueueSet);
 
-	xTaskCreate(task1, "Task1", 4 * configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
+	xTaskCreate(task1, "Task1", 5 * configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
 
 	vTaskStartScheduler();
 

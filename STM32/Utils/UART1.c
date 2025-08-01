@@ -61,7 +61,7 @@ void USART1_SendByte(uint8_t Byte) {
 
 void printf1(char *format, ...) {
 	// 加锁
-	char strs[50];
+	char strs[120];
 
 	// 替换内容 -> 存储到strs
 	va_list list;
