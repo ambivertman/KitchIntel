@@ -113,7 +113,6 @@ void task1(void *arg) {
 		send_to_esp("Hihi\n");
 		vTaskDelay(3000);
 	}
-
 }
 
 
