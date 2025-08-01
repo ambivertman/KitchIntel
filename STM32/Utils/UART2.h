@@ -13,7 +13,7 @@ void USART2_Init(void);
 void USART2_SendByte(uint8_t Byte);
 void send_to_esp(char *format, ...);
 
-extern QueueHandle_t queue2;
+extern QueueHandle_t queue_esp01s;
 
 
 #endif

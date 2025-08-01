@@ -13,7 +13,6 @@ void USART3_Init(void);
 void USART3_SendByte(uint8_t Byte);
 void printf3(char *format, ...);
 
-extern QueueHandle_t queue1;
-
+extern QueueHandle_t queue_hc05;
 
 #endif
