@@ -1,5 +1,6 @@
 // UART1.c
 #include "UART1.h"
+#include "UART3.h"
 
 //用于和PC串口工具连接
 void USART1_Init(void) {
@@ -47,9 +48,11 @@ void USART1_Init(void) {
 void USART1_IRQHandler(void) {
 	if (USART_GetITStatus(USART1, USART_IT_RXNE) != RESET) {
 		char data = USART_ReceiveData(USART1);
-		BaseType_t Is_Woken = pdTRUE;
-		xQueueSendFromISR(queue_usart, &data, &Is_Woken);
+		USART_SendData(USART3, data);
+		//BaseType_t Is_Woken = pdTRUE;
+		//xQueueSendFromISR(queue_usart, &data, &Is_Woken);
 	}
+
 }
 
 
