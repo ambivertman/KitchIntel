@@ -63,7 +63,7 @@ void USART3_SendByte(uint8_t Byte) {
 
 
 
-void printf3(char *format, ...) {
+void send_to_hco5(char *format, ...) {
 	// 加锁
 	char strs[100];
 
