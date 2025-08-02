@@ -11,7 +11,7 @@
 
 void USART3_Init(void);
 void USART3_SendByte(uint8_t Byte);
-void send_to_hco5(char *format, ...);
+void send_to_hc05(char *format, ...);
 
 extern QueueHandle_t queue_hc05;
 
