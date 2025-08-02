@@ -10,7 +10,7 @@
 //QueueSetHandle_t xQueueSet;
 QueueHandle_t queue_usart, queue_esp01s, queue_hc05;
 
-void task1(void *arg) {
+void Init_task(void *arg) {
 	printf1("task1 start\r\n");
 	send_to_esp("+++");
 	char buf[100] = { 0 };
@@ -68,59 +68,59 @@ void task1(void *arg) {
 
 
 
-	// //=====================进行TCP连接=======================
-	// //拼接TCP连接指令
-	// send_to_esp("AT+CIPSTART=\"TCP\",\"47.115.220.165\",9013\r\n");
-	// printf1("TCP command sended\r\n");
-	// while (1) {
-	// 	ret = xQueueReceive(queue_esp01s, &data, portMAX_DELAY);
-	// 	if (ret == pdTRUE) {
-	// 		buf[strlen(buf)] = data;
+	//=====================进行TCP连接=======================
+	//拼接TCP连接指令
+	send_to_esp("AT+CIPSTART=\"TCP\",\"47.115.220.165\",9013\r\n");
+	printf1("TCP command sended\r\n");
+	while (1) {
+		ret = xQueueReceive(queue_esp01s, &data, portMAX_DELAY);
+		if (ret == pdTRUE) {
+			buf[strlen(buf)] = data;
 
-	// 	}
-	// 	if (strstr(buf, "OK") != NULL) {
-	// 		printf1("wifi_response:%s\r\n", buf);
-	// 		memset(buf, 0, strlen(buf));
-	// 		break;
-	// 	}
-	// }
+		}
+		if (strstr(buf, "OK") != NULL) {
+			printf1("wifi_response:%s\r\n", buf);
+			memset(buf, 0, strlen(buf));
+			break;
+		}
+	}
 
-	// //==================进入数据透传模式======================
-	// send_to_esp("AT+CIPMODE=1\r\n");
-	// printf1("CIP command sended\r\n");
-	// while (1) {
-	// 	ret = xQueueReceive(queue_esp01s, &data, portMAX_DELAY);
-	// 	if (ret == pdTRUE) {
-	// 		buf[strlen(buf)] = data;
+	//==================进入数据透传模式======================
+	send_to_esp("AT+CIPMODE=1\r\n");
+	printf1("CIP command sended\r\n");
+	while (1) {
+		ret = xQueueReceive(queue_esp01s, &data, portMAX_DELAY);
+		if (ret == pdTRUE) {
+			buf[strlen(buf)] = data;
 
-	// 	}
-	// 	if (strstr(buf, "OK") != NULL) {
-	// 		printf1("wifi_response:%s\r\n", buf);
-	// 		memset(buf, 0, strlen(buf));
-	// 		break;
-	// 	}
-	// }
+		}
+		if (strstr(buf, "OK") != NULL) {
+			printf1("wifi_response:%s\r\n", buf);
+			memset(buf, 0, strlen(buf));
+			break;
+		}
+	}
 
-	// send_to_esp("AT+CIPSEND\r\n");
-	// printf1("CIPSEND command sended\r\n");
-	// while (1) {
-	// 	ret = xQueueReceive(queue_esp01s, &data, portMAX_DELAY);
-	// 	if (ret == pdTRUE) {
-	// 		buf[strlen(buf)] = data;
+	send_to_esp("AT+CIPSEND\r\n");
+	printf1("CIPSEND command sended\r\n");
+	while (1) {
+		ret = xQueueReceive(queue_esp01s, &data, portMAX_DELAY);
+		if (ret == pdTRUE) {
+			buf[strlen(buf)] = data;
 
-	// 	}
-	// 	if (strstr(buf, "OK") != NULL) {
-	// 		printf1("wifi_response:%s\r\n", buf);
-	// 		memset(buf, 0, strlen(buf));
-	// 		break;
-	// 	}
-	// }
+		}
+		if (strstr(buf, "OK") != NULL) {
+			printf1("wifi_response:%s\r\n", buf);
+			memset(buf, 0, strlen(buf));
+			break;
+		}
+	}
 
-	// //===============发送数据======================
-	// while (1) {
-	// 	send_to_esp("Hihi\n");
-	// 	vTaskDelay(3000);
-	// }
+	//===============发送数据======================
+	while (1) {
+		send_to_esp("Hihi\n");
+		vTaskDelay(3000);
+	}
 }
 
 
@@ -138,7 +138,7 @@ int main(void) {
 	queue_esp01s = xQueueCreate(100, 1);
 
 	printf1("Queues created\r\n");
-	xTaskCreate(task1, "Task1", 3 * configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
+	xTaskCreate(Init_task, "Task1", 2 * configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
 
 	vTaskStartScheduler();
 
