@@ -31,30 +31,7 @@ void USART1_Init(void) {
 
 	// 启动USART1
 	USART_Cmd(USART1, ENABLE);
-
-	//配置中断源
-	USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
-
-	//初始化NVIC设置
-	NVIC_InitTypeDef NVIC_InitStruct;
-	NVIC_InitStruct.NVIC_IRQChannel = USART1_IRQn;
-	NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
-	NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 11;
-	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 0;
-
-	NVIC_Init(&NVIC_InitStruct);
 }
-
-void USART1_IRQHandler(void) {
-	if (USART_GetITStatus(USART1, USART_IT_RXNE) != RESET) {
-		char data = USART_ReceiveData(USART1);
-		USART_SendData(USART3, data);
-		//BaseType_t Is_Woken = pdTRUE;
-		//xQueueSendFromISR(queue_usart, &data, &Is_Woken);
-	}
-
-}
-
 
 // 发送字节
 void USART1_SendByte(uint8_t Byte) {

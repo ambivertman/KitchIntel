@@ -1,4 +1,4 @@
-// UART1.c
+// UART3.c
 #include "UART1.h"
 #include "UART3.h"
 

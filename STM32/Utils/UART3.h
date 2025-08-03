@@ -1,4 +1,4 @@
-// UART1.h
+// UART3.h
 #ifndef __UART3_H__
 #define __UART3_H__
 
