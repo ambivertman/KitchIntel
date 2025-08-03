@@ -8,17 +8,18 @@ QueueHandle_t queue_esp01s, queue_hc05;
 char buf[100] = { 0 };
 
 void Init_task(void *arg) {
-
+	send_to_esp("+++");
+	vTaskDelay(1000);
 	if (Check_wifi_Connection() == false) {
 		Init_wifi();
 	}
 	printf1("wifi already connected\r\n");
 	// //创建数据传输任务和数据采集任务
-	// Transmit_task_Init();
+	xTaskCreate(Transmit_task, "Transmit_task", 3 * configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
 	// CollectData_task_Init();
 
-	// //删除当前任务
-	// vTaskDelete(NULL);
+	//删除当前任务
+	vTaskDelete(NULL);
 }
 
 
