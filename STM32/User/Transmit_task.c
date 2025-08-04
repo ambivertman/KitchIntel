@@ -7,24 +7,38 @@ void Transmit_task_Init(void) {
 
 void Transmit_task(void *arg) {
     printf1("Transmit_task start\r\n");
-    //取得二值信号量就建立连接发送数据
+    //从消息队列中取得消息就建立连接发送数据
     while (1) {
         char data_buf[30];
         if (xQueueReceive(queue_data, data_buf, portMAX_DELAY) == pdTRUE) {
-            if (Connect_TCP() == false) {
-                Init_wifi();
-                continue;
+
+            //建立TCP连接
+            while (1) {
+                if (Connect_TCP() == false) {
+                    Delay_ms(1000);
+                    printf1("TCP connection failed, retrying...\r\n");
+                    continue;
+                } else {
+                    break;
+                }
             }
-            vTaskDelay(200); // 等待ESP响应
+            vTaskDelay(200);
+
+            // 进入数据透传模式
             Enter_IO_Mode();
             vTaskDelay(200);
+
+            //开始发送数据
             printf1("Sending data...\r\n");
             printf1("%s", data_buf);
             Send_Data(data_buf);
             //send_to_esp(data_buf);
-            memset(data_buf, 0, strlen(data_buf));
+
+            //退出数据透传模式
             vTaskDelay(200);
             Quit_IO_Mode();
+
+            //断开TCP连接
             vTaskDelay(200);
             Disconnect_TCP();
             printf1("Transmit_task end\r\n");
@@ -36,8 +50,10 @@ void Transmit_task(void *arg) {
 bool Connect_TCP(void) {
     BaseType_t ret = pdFALSE;
     char data = 0;
-    send_to_esp("AT+CIPSTART=\"TCP\",\"47.115.220.165\",9013\r\n");
-    printf1("TCP command sended\r\n");
+    char buf[100] = { 0 };
+
+    send_to_esp("AT+CIPSTART=\"TCP\",\"124.222.249.185\",9006\r\n");
+    printf1("TCP command sended\r\n\r\n");
     while (1) {
         ret = xQueueReceive(queue_esp01s, &data, portMAX_DELAY);
         if (ret == pdTRUE) {
@@ -45,11 +61,13 @@ bool Connect_TCP(void) {
         }
         if (strstr(buf, "No") != NULL) {
             printf1("esp_response:%s\r\n", buf);
+            return false;
+        } else if (strstr(buf, "CLOSED") != NULL) {
+            printf1("esp_response:%s\r\n", buf);
             memset(buf, 0, strlen(buf));
             return false;
         } else if (strstr(buf, "OK") != NULL) {
             printf1("esp_response:%s\r\n", buf);
-            memset(buf, 0, strlen(buf));
             return true;
         }
     }
@@ -58,14 +76,14 @@ bool Connect_TCP(void) {
 void Enter_IO_Mode(void) {
     BaseType_t ret = pdFALSE;
     char data = 0;
+    char buf[100] = { 0 };
     //==================开启数据透传模式======================
     send_to_esp("AT+CIPMODE=1\r\n");
-    printf1("enter CIP mode\r\n");
+    printf1("enter CIP mode\r\n\r\n");
     while (1) {
         ret = xQueueReceive(queue_esp01s, &data, portMAX_DELAY);
         if (ret == pdTRUE) {
             buf[strlen(buf)] = data;
-
         }
         if (strstr(buf, "OK") != NULL) {
             printf1("wifi_response:%s\r\n", buf);
@@ -75,15 +93,14 @@ void Enter_IO_Mode(void) {
     }
     //==================进入数据透传模式======================
     send_to_esp("AT+CIPSEND\r\n");
-    printf1("CIPSEND command sended\r\n");
+    printf1("CIPSEND command sended\r\n\r\n");
     while (1) {
         ret = xQueueReceive(queue_esp01s, &data, portMAX_DELAY);
         if (ret == pdTRUE) {
             buf[strlen(buf)] = data;
-
         }
         if (strstr(buf, "OK") != NULL) {
-            printf1("wifi_response:%s\r\n", buf);
+            printf1("wifi_response:%s\r\n\r\n", buf);
             memset(buf, 0, strlen(buf));
             break;
         }
@@ -93,16 +110,17 @@ void Enter_IO_Mode(void) {
 void Quit_IO_Mode(void) {
     BaseType_t ret = pdFALSE;
     char data = 0;
-    printf1("Quitting IO mode\r\n");
-    vTaskDelay(1000); // 等待ESP响应
+    char buf[100] = { 0 };
+    printf1("Quitting IO mode\r\n\r\n");
+    Delay_ms(1000); // 等待ESP响应
     printf1("delay done\r\n");
 
 
     //==================退出数据透传模式======================
     send_to_esp("+++");
-    printf1("+++ command sended\r\n");
-    vTaskDelay(2000); // 等待ESP响应
-    printf1("Quit IO Mode\r\n");
+    printf1("+++ command sended\r\n\r\n");
+    Delay_ms(2000); // 等待ESP响应
+    printf1("Quit IO Mode\r\n\r\n");
 
 
     //==================关闭数据透传模式======================
@@ -114,31 +132,31 @@ void Quit_IO_Mode(void) {
 
         }
         if (strstr(buf, "OK") != NULL) {
-            printf1("wifi_response:%s\r\n", buf);
+            printf1("wifi_response:%s\r\n\r\n", buf);
             memset(buf, 0, strlen(buf));
             break;
         }
     }
-    printf1("CIP mdoe quit\r\n");
+    printf1("CIP mode quit\r\n\r\n");
 }
 
 void Disconnect_TCP(void) {
     BaseType_t ret = pdFALSE;
     char data = 0;
+    char buf[100] = { 0 };
     send_to_esp("AT+CIPCLOSE\r\n");
-    printf1("CIPCLOSE command sended\r\n");
+    printf1("CIPCLOSE command sended\r\n\r\n");
     while (1) {
         ret = xQueueReceive(queue_esp01s, &data, portMAX_DELAY);
         if (ret == pdTRUE) {
             buf[strlen(buf)] = data;
         }
         if (strstr(buf, "OK") != NULL) {
-            printf1("wifi_response:%s\r\n", buf);
-            memset(buf, 0, strlen(buf));
+            printf1("wifi_response:%s\r\n\r\n", buf);
             break;
         }
     }
-    printf1("TCP connection closed\r\n");
+    printf1("TCP connection closed\r\n\r\n");
 }
 
 void Send_Data(char *data_buf) {

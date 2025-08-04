@@ -3,7 +3,7 @@
 
 #include "header.h"
 #include "Init_task.h"
-extern char buf[100];
+
 extern QueueHandle_t queue_data;
 
 void Transmit_task(void *arg);

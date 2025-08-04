@@ -4,7 +4,8 @@
 bool Check_wifi_Connection(void) {
     BaseType_t ret = pdFALSE;
     char data = 0;
-    printf1("checking connection\r\n");
+    char buf[100] = { 0 };
+    printf1("checking connection\r\n\r\n");
     send_to_esp("AT+CWJAP?\r\n");
     while (1) {
         ret = xQueueReceive(queue_esp01s, &data, portMAX_DELAY);
@@ -12,11 +13,11 @@ bool Check_wifi_Connection(void) {
             buf[strlen(buf)] = data;
         }
         if (strstr(buf, "No") != NULL && strstr(buf, "OK") != NULL) {
-            printf1("wifi_response:%s\r\n", buf);
+            printf1("wifi_response:%s\r\n\r\n", buf);
             memset(buf, 0, strlen(buf));
             return false;
         } else if (strstr(buf, "OK") != NULL) {
-            printf1("wifi_response:%s\r\n", buf);
+            printf1("wifi_response:%s\r\n\r\n", buf);
             memset(buf, 0, strlen(buf));
             return true;
         }
@@ -45,9 +46,10 @@ void Init_wifi(void) {
 }
 
 void Get_Account(char *wifi_account, char *wifi_passwd) {
-    printf1("Getting account\r\n");
-    char data = 0;
+    printf1("Getting account\r\n\r\n");
     BaseType_t ret = pdFALSE;
+    char data = 0;
+    char buf[100] = { 0 };
     //==========连接蓝牙获取wifi账号密码====
     int flag_count = 0;
     while (1) {
@@ -64,21 +66,18 @@ void Get_Account(char *wifi_account, char *wifi_passwd) {
         }
     }
     sscanf(buf, "!%[^=]=%[^!]!", wifi_account, wifi_passwd);
-    printf1("%s\r\n", buf);
-    memset(buf, 0, strlen(buf));
-    printf1("Blue tooth task finished\r\n");
+    printf1("Blue tooth task finished\r\n\r\n");
 }
 
 bool Connect_wifi(char *wifi_account, char *wifi_passwd) {
-    printf1("Connecting wifi\r\n");
-    char data = 0;
+    printf1("Connecting wifi\r\n\r\n");
     BaseType_t ret = pdFALSE;
+    char data = 0;
+    char buf[100] = { 0 };
     //=========连接wifi=============
     //已获取账号密码, 开始向esp01s发送
     //拼接命令
-
     sprintf(buf, "AT+CWJAP_DEF=\"%s\",\"%s\"\r\n", wifi_account, wifi_passwd);
-    printf1("wifi_buf:%s", buf);
     send_to_esp(buf);
     memset(buf, 0, strlen(buf));
     //接收esp01s的回复
@@ -88,11 +87,11 @@ bool Connect_wifi(char *wifi_account, char *wifi_passwd) {
             buf[strlen(buf)] = data;
         }
         if (strstr(buf, "OK") != NULL) {
-            printf1("wifi_response:%s\r\n", buf);
+            printf1("wifi_response:%s\r\n\r\n", buf);
             memset(buf, 0, strlen(buf));
             return true;
         } else if (strstr(buf, "Fail") != NULL) {
-            printf1("wifi_response:%s\r\n", buf);
+            printf1("wifi_response:%s\r\n\r\n", buf);
             memset(buf, 0, strlen(buf));
             return false;
         }
@@ -100,9 +99,9 @@ bool Connect_wifi(char *wifi_account, char *wifi_passwd) {
 }
 
 void Return_Connection_Status(char *wifi_account) {
+    char buf[40] = { 0 };
     sprintf(buf, "{\"status\":0,\"wifi name\":\"%s\"}", wifi_account);
     printf1("send to hc05 buf:%s\r\n", buf);
     send_to_hc05(buf);
-    memset(buf, 0, strlen(buf));
 }
 

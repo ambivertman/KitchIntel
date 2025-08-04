@@ -7,7 +7,7 @@ void CollectData_task(void *arg) {
         char data_buf[30] = { 0 };
         printf1("Collecting data...\r\n");
         char light_data[15] = "\"Light\":123\n";
-        char temp_data[15] = "\"Temp\":25\n";
+        char temp_data[15] = "\"Tmp\":25\n";
         sprintf(data_buf, "%s%s", light_data, temp_data);
         xQueueSend(queue_data, &data_buf, portMAX_DELAY);
         memset(data_buf, 0, sizeof(data_buf));
