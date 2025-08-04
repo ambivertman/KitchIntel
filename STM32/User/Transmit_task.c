@@ -8,14 +8,29 @@ void Transmit_task_Init(void) {
 void Transmit_task(void *arg) {
     printf1("Transmit_task start\r\n");
     //取得二值信号量就建立连接发送数据
-    Connect_TCP();
-    Enter_IO_Mode();
-    //Send_Data(buf);
-    printf1("Sending data...\r\n");
-    send_to_esp("Hello from STM32\r\n");
-    Quit_IO_Mode();
-    Disconnect_TCP();
-    printf1("Transmit_task end\r\n");
+    while (1) {
+        char data_buf[30];
+        if (xQueueReceive(queue_data, data_buf, portMAX_DELAY) == pdTRUE) {
+            if (Connect_TCP() == false) {
+                Init_wifi();
+                continue;
+            }
+            vTaskDelay(200); // 等待ESP响应
+            Enter_IO_Mode();
+            vTaskDelay(200);
+            printf1("Sending data...\r\n");
+            printf1("%s", data_buf);
+            Send_Data(data_buf);
+            //send_to_esp(data_buf);
+            memset(data_buf, 0, strlen(data_buf));
+            vTaskDelay(200);
+            Quit_IO_Mode();
+            vTaskDelay(200);
+            Disconnect_TCP();
+            printf1("Transmit_task end\r\n");
+        }
+    }
+
 }
 
 bool Connect_TCP(void) {
@@ -28,7 +43,11 @@ bool Connect_TCP(void) {
         if (ret == pdTRUE) {
             buf[strlen(buf)] = data;
         }
-        if (strstr(buf, "OK") != NULL) {
+        if (strstr(buf, "No") != NULL) {
+            printf1("esp_response:%s\r\n", buf);
+            memset(buf, 0, strlen(buf));
+            return false;
+        } else if (strstr(buf, "OK") != NULL) {
             printf1("esp_response:%s\r\n", buf);
             memset(buf, 0, strlen(buf));
             return true;
@@ -75,19 +94,19 @@ void Quit_IO_Mode(void) {
     BaseType_t ret = pdFALSE;
     char data = 0;
     printf1("Quitting IO mode\r\n");
-    vTaskDelay(500);
+    vTaskDelay(1000); // 等待ESP响应
     printf1("delay done\r\n");
 
 
     //==================退出数据透传模式======================
     send_to_esp("+++");
     printf1("+++ command sended\r\n");
-    vTaskDelay(1000);
+    vTaskDelay(2000); // 等待ESP响应
     printf1("Quit IO Mode\r\n");
 
 
     //==================关闭数据透传模式======================
-    send_to_esp("AT+CIPCLOSE\r\n");
+    send_to_esp("AT+CIPMODE=0\r\n");
     while (1) {
         ret = xQueueReceive(queue_esp01s, &data, portMAX_DELAY);
         if (ret == pdTRUE) {
@@ -100,7 +119,7 @@ void Quit_IO_Mode(void) {
             break;
         }
     }
-    printf1("CIPCLOSE command sended\r\n");
+    printf1("CIP mdoe quit\r\n");
 }
 
 void Disconnect_TCP(void) {
@@ -120,5 +139,12 @@ void Disconnect_TCP(void) {
         }
     }
     printf1("TCP connection closed\r\n");
+}
+
+void Send_Data(char *data_buf) {
+    char *HTTP_Header = "POST/HTTP/1.0\n\n";
+    char HTTP_buf[60] = { 0 };
+    sprintf(HTTP_buf, "%s%s", HTTP_Header, data_buf);
+    send_to_esp(HTTP_buf);
 }
 
