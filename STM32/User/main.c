@@ -27,7 +27,8 @@ int main(void) {
 	USART1_Init();//用于pc串口工具
 	USART2_Init();//用于esp01s
 	USART3_Init();//用于hc05
-	Delay_Init();//
+	Delay_Init();//初始化延时函数
+	AD_Init(); // 初始化ADC
 
 
 	queue_hc05 = xQueueCreate(20, 1);

@@ -101,7 +101,6 @@ bool Connect_wifi(char *wifi_account, char *wifi_passwd) {
 void Return_Connection_Status(char *wifi_account) {
     char buf[40] = { 0 };
     sprintf(buf, "{\"status\":0,\"wifi name\":\"%s\"}", wifi_account);
-    printf1("send to hc05 buf:%s\r\n", buf);
     send_to_hc05(buf);
 }
 

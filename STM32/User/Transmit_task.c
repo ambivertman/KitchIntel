@@ -22,11 +22,11 @@ void Transmit_task(void *arg) {
                     break;
                 }
             }
-            vTaskDelay(200);
+            Delay_ms(200);
 
             // 进入数据透传模式
             Enter_IO_Mode();
-            vTaskDelay(200);
+            Delay_ms(200);
 
             //开始发送数据
             printf1("Sending data...\r\n");
@@ -35,13 +35,13 @@ void Transmit_task(void *arg) {
             //send_to_esp(data_buf);
 
             //退出数据透传模式
-            vTaskDelay(200);
+            Delay_ms(200);
             Quit_IO_Mode();
 
             //断开TCP连接
-            vTaskDelay(200);
+            Delay_ms(200);
             Disconnect_TCP();
-            printf1("Transmit_task end\r\n");
+            printf1("**************Transmit_task end\r\n");
         }
     }
 
@@ -111,18 +111,12 @@ void Quit_IO_Mode(void) {
     BaseType_t ret = pdFALSE;
     char data = 0;
     char buf[100] = { 0 };
-    printf1("Quitting IO mode\r\n\r\n");
     Delay_ms(1000); // 等待ESP响应
-    printf1("delay done\r\n");
 
 
     //==================退出数据透传模式======================
     send_to_esp("+++");
-    printf1("+++ command sended\r\n\r\n");
     Delay_ms(2000); // 等待ESP响应
-    printf1("Quit IO Mode\r\n\r\n");
-
-
     //==================关闭数据透传模式======================
     send_to_esp("AT+CIPMODE=0\r\n");
     while (1) {
@@ -133,7 +127,6 @@ void Quit_IO_Mode(void) {
         }
         if (strstr(buf, "OK") != NULL) {
             printf1("wifi_response:%s\r\n\r\n", buf);
-            memset(buf, 0, strlen(buf));
             break;
         }
     }
@@ -160,7 +153,7 @@ void Disconnect_TCP(void) {
 }
 
 void Send_Data(char *data_buf) {
-    char *HTTP_Header = "POST/HTTP/1.0\n\n";
+    char *HTTP_Header = "POST /data /HTTP/1.0\n\n";
     char HTTP_buf[60] = { 0 };
     sprintf(HTTP_buf, "%s%s", HTTP_Header, data_buf);
     send_to_esp(HTTP_buf);

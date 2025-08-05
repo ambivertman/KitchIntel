@@ -6,11 +6,10 @@ void CollectData_task(void *arg) {
     while (1) {
         char data_buf[30] = { 0 };
         printf1("Collecting data...\r\n");
-        char light_data[15] = "\"Light\":123\n";
-        char temp_data[15] = "\"Tmp\":25\n";
-        sprintf(data_buf, "%s%s", light_data, temp_data);
+        int light_value = AD_GetValue(ADC_Channel_1); // 假设使用ADC_Channel_1采集光照数据
+        int temp_value = AD_GetValue(ADC_Channel_4); // 假设使用ADC_Channel_4采集温度数据
+        sprintf(data_buf, "Light is %d\nTmp is %d\n", light_value, temp_value);
         xQueueSend(queue_data, &data_buf, portMAX_DELAY);
-        memset(data_buf, 0, sizeof(data_buf));
         printf1("CollectData_task end\r\n");
         vTaskDelay(50000);
     }
