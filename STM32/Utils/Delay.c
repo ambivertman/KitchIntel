@@ -36,7 +36,7 @@ void TIM2_IRQHandler(void) {
 }
 
 void Delay_ms(uint16_t ms) {
-    while (ms--) {
+    while (ms-- != 0) {
         Delay_done = 0;
         TIM_Cmd(TIM2, ENABLE);  // 开启TIM2
         TIM_SetCounter(TIM2, 0);
