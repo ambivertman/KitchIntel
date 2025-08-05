@@ -3,7 +3,8 @@
 #define MAX_LINE_LENGTH 20
 void save_data(const char* buf);
 void send_data(int net_fd);
-void Get_Last_Line(const char *filename, char *last_line);
+void get_last_line(const char *filename, char *last_line);
+void delete_data(void);
 
 typedef struct {
     int fd;
@@ -72,7 +73,7 @@ int main(void) {
         for (int i = 0;i < size;i++) {
             net_fd = list[i].fd;
             if (FD_ISSET(net_fd, &temp_set)) {
-                char buf[4096] = { 0 };
+                char buf[1024] = { 0 };
                 //接收客户端发来的消息
                 ssize_t ret = recv(net_fd, buf, sizeof(buf), 0);
 
@@ -99,8 +100,11 @@ int main(void) {
                     save_data(buf);                    
                 }
                 //如果是GET则进行发送
-                if(strstr(buf,"GET")!=NULL){
+                if(strstr(buf,"GET /1")!=NULL){
                     send_data(net_fd);
+                }
+                if(strstr(buf,"GET /2")!=NULL){
+                    delete_data();
                 }
             }
         }
@@ -108,7 +112,7 @@ int main(void) {
         for(int i = 0;i < size;i++) {
             time_t now_time;
             time(&now_time);
-            if (now_time - list[i].last_time > 600) {
+            if (now_time - list[i].last_time > 120) {
                 net_fd = list[i].fd;
                 FD_CLR(net_fd, &base_set);
                 close(net_fd);
@@ -128,6 +132,7 @@ int main(void) {
 }
 
 void save_data(const char * buf){
+    printf("writing data\n");
     //用于数据的本地化存储
     int Light_fd = open("./data/light.txt",O_RDWR|O_CREAT|O_APPEND,0666);
     int Tmp_fd = open("./data/temprature.txt",O_RDWR|O_CREAT|O_APPEND,0666);
@@ -195,16 +200,16 @@ void send_data(int net_fd){
     char *HTTP_Header = "HTTP/1.0 200 OK\n\n";
     char light_lline[MAX_LINE_LENGTH] = {0};
     char tmp_lline[MAX_LINE_LENGTH] = {0};
-    
-    Get_Last_Line(ligth_file,light_lline);
-    Get_Last_Line(tmp_file,tmp_lline);
 
-    sprintf(HTTP_buf,"%s{%s,%s}",HTTP_Header,light_lline,tmp_lline);
+    get_last_line(ligth_file,light_lline);
+    get_last_line(tmp_file,tmp_lline);
+
+    sprintf(HTTP_buf,"%s{\"light\":\"%s\",\"tmp\":\"%s\"}",HTTP_Header,light_lline,tmp_lline);
     send(net_fd,HTTP_buf,strlen(HTTP_buf),0);
     close(net_fd);
 
 }
-void  Get_Last_Line(const char *filename, char * last_line) {
+void  get_last_line(const char *filename, char * last_line) {
     FILE *file = fopen(filename, "r"); // 打开文件
     if (file == NULL) {
         perror("无法打开文件");
@@ -212,7 +217,19 @@ void  Get_Last_Line(const char *filename, char * last_line) {
     }
     char current_line[MAX_LINE_LENGTH] = {0}; // 存储当前读取的行
     while (fgets(current_line, sizeof(current_line), file) != NULL) {
-        strncpy(last_line, current_line,strlen(current_line)-1); // 将当前行复制到last_line
+        strncpy(last_line, current_line, strlen(current_line)-1); // 将当前行复制到last_line
     }
     fclose(file); // 关闭文件
 }
+
+void delete_data(void){
+    int Light_fd = open("./data/light.txt",O_RDWR|O_CREAT|O_APPEND,0666);
+    int Tmp_fd = open("./data/temprature.txt",O_RDWR|O_CREAT|O_APPEND,0666);
+    
+    ftruncate(Light_fd, 0);
+    ftruncate(Tmp_fd, 0);
+    
+    close(Light_fd);
+    close(Tmp_fd);
+}
+
