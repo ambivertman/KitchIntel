@@ -11,7 +11,7 @@ void CollectData_task(void *arg) {
         sprintf(data_buf, "Light is %d\nTmp is %d\n", light_value, temp_value);
         xQueueSend(queue_data, &data_buf, portMAX_DELAY);
         printf1("CollectData_task end\r\n");
-        vTaskDelay(50000);
+        vTaskDelay(20000);
     }
 }
 

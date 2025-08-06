@@ -36,6 +36,14 @@ int main(void) {
 	queue_esp01s = xQueueCreate(100, 1);
 	queue_data = xQueueCreate(3, 30);
 
+	// 检查是否是因为IWDG触发的复位
+	if (RCC_GetFlagStatus(RCC_FLAG_IWDGRST) != RESET) {
+		printf1("reset by IWDG \r\n");
+		RCC_ClearFlag();
+	} else {
+		printf1("Normal boot \r\n");
+	}
+
 	printf1("Task started\r\n");
 	xTaskCreate(Init_task, "Init_task", 2 * configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY + 1, NULL);
 	// 创建按键扫描任务

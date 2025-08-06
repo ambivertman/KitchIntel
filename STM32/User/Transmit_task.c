@@ -44,6 +44,8 @@ void Transmit_task(void *arg) {
             Disconnect_TCP();
             printf1("Transmit_task end\r\n");
             printf1("******************\r\n");
+            //喂狗
+            IWDG_Feed();
         }
     }
 
@@ -119,7 +121,7 @@ void Quit_IO_Mode(void) {
 
     //==================退出数据透传模式======================
     send_to_esp("+++");
-    Delay_ms(5000); // 等待ESP响应
+    Delay_ms(3000); // 等待ESP响应
     //==================关闭数据透传模式======================
     send_to_esp("AT+CIPMODE=0\r\n");
     while (1) {

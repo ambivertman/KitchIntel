@@ -10,5 +10,6 @@
 #include "FLASH.h"
 #include "ADC.h"
 #include "Reset_Key.h"
+#include "IWDG.h"
 #include <string.h>
 #include <stdbool.h>
