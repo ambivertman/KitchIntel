@@ -13,18 +13,16 @@ bool Check_wifi_Connection(void) {
             buf[strlen(buf)] = data;
         }
         if (strstr(buf, "No") != NULL && strstr(buf, "OK") != NULL) {
-            printf1("wifi_response:%s\r\n\r\n", buf);
-            memset(buf, 0, strlen(buf));
+            printf1("wifi_response:%s\r\n", buf);
             return false;
         } else if (strstr(buf, "OK") != NULL) {
-            printf1("wifi_response:%s\r\n\r\n", buf);
-            memset(buf, 0, strlen(buf));
+            printf1("wifi_response:%s\r\n", buf);
             return true;
         }
     }
 }
 
-void Init_wifi(void) {
+void Init_wifi_bt(void) {
     char wifi_account[15] = { 0 };
     char wifi_passwd[15] = { 0 };
 
@@ -34,7 +32,7 @@ void Init_wifi(void) {
         if (ret == true) {
             break;
         } else {
-            printf1("账号密码错误");
+            printf1("wrong account or password, please input again\r\n");
             memset(wifi_account, 0, strlen(wifi_account));
             memset(wifi_passwd, 0, strlen(wifi_passwd));
             Get_Account(wifi_account, wifi_passwd);
@@ -42,6 +40,7 @@ void Init_wifi(void) {
         }
 
     }
+    saveAccountToFlash(wifi_account, wifi_passwd);
     Return_Connection_Status(wifi_account);
 }
 
@@ -102,5 +101,22 @@ void Return_Connection_Status(char *wifi_account) {
     char buf[40] = { 0 };
     sprintf(buf, "{\"status\":0,\"wifi name\":\"%s\"}", wifi_account);
     send_to_hc05(buf);
+}
+
+void Init_wifi_flash(void) {
+    char wifi_account[15] = { 0 };
+    char wifi_passwd[15] = { 0 };
+    if (checkFlash() == false) {
+        printf1("Flash is empty, please input account and password via bluetooth\r\n");
+        Init_wifi_bt();
+    } else {
+        loadAccountFromFlash(wifi_account, wifi_passwd);
+        printf1("Account loaded from flash\r\n");
+        if (Connect_wifi(wifi_account, wifi_passwd) == false) {
+            printf1("Connect wifi failed, please input account and password via bluetooth\r\n");
+            Init_wifi_bt();
+        }
+    }
+    Return_Connection_Status(wifi_account);
 }
 

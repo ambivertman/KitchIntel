@@ -13,7 +13,7 @@ void Enter_IO_Mode(void);
 void Quit_IO_Mode(void);
 void Disconnect_TCP(void);
 void Send_Data(char *data_buf);
-
+bool Check_Response(void);
 
 #endif // __Transmit_task_h__
 
