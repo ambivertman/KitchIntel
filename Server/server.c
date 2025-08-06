@@ -5,6 +5,8 @@ void save_data(const char* buf);
 void send_data(int net_fd);
 void get_last_line(const char *filename, char *last_line);
 void delete_data(void);
+void get_config(char *ip, char *port);
+int get_parameter(const char *key, char *value);
 
 typedef struct {
     int fd;
@@ -12,11 +14,12 @@ typedef struct {
 }msg;
 
 int main(void) {
-    char *ip = "0.0.0.0";
-    char *port = "9006";
+    char ip[20] = {0};
+    char port[10] = {0};
+    get_config(ip,port);
+    printf("%s\n%s",ip,port);
     //创建socket对象
     int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
-
     //实现如果端口被time_wait占用也可以重新使用该端口
     int reuse = 1;
     setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
@@ -98,6 +101,8 @@ int main(void) {
                 //如果是POST则进行存储
                 if(strstr(buf,"POST")!=NULL){
                     save_data(buf);                    
+                    char * HTTP_Header = "HTTP/1.0 200 OK \n\n";
+                    send(net_fd,HTTP_Header,strlen(HTTP_Header),0);
                 }
                 //如果是GET则进行发送
                 if(strstr(buf,"GET /1")!=NULL){
@@ -225,11 +230,38 @@ void  get_last_line(const char *filename, char * last_line) {
 void delete_data(void){
     int Light_fd = open("./data/light.txt",O_RDWR|O_CREAT|O_APPEND,0666);
     int Tmp_fd = open("./data/temprature.txt",O_RDWR|O_CREAT|O_APPEND,0666);
-    
+
     ftruncate(Light_fd, 0);
     ftruncate(Tmp_fd, 0);
-    
+
     close(Light_fd);
     close(Tmp_fd);
 }
+void get_config(char *ip, char *port){
+    get_parameter("ip",ip);
+    get_parameter("port",port);
+    
+}
 
+int get_parameter(const char *key, char *value){
+    FILE * file = fopen("./config/config.ini", "r");
+    while(1){
+        char line[100];
+        bzero(line, sizeof(line));
+        // 读一行数据
+        char *res = fgets(line, sizeof(line), file);
+        if(res == NULL){
+            char buf[] = "没有要找的内容 \n";
+            memcpy(value, buf, strlen(buf));
+            return -1;
+        }
+        // 处理数据
+        char *line_key = strtok(line, "=");
+        if(strcmp(key, line_key) == 0){
+            // 要找的内容
+            char *line_value = strtok(NULL, "=");
+            memcpy(value, line_value, strlen(line_value));
+            return 0;
+        }
+    }
+}
