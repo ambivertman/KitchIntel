@@ -9,5 +9,6 @@
 #include "Delay.h"
 #include "FLASH.h"
 #include "ADC.h"
+#include "Reset_Key.h"
 #include <string.h>
 #include <stdbool.h>
