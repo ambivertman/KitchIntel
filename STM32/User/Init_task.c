@@ -87,11 +87,9 @@ bool Connect_wifi(char *wifi_account, char *wifi_passwd) {
         }
         if (strstr(buf, "OK") != NULL) {
             printf1("wifi_response:%s\r\n\r\n", buf);
-            memset(buf, 0, strlen(buf));
             return true;
-        } else if (strstr(buf, "Fail") != NULL) {
+        } else if (strstr(buf, "FAIL") != NULL) {
             printf1("wifi_response:%s\r\n\r\n", buf);
-            memset(buf, 0, strlen(buf));
             return false;
         }
     }
